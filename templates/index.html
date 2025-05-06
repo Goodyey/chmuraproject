@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chmura Project</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            padding-top: 50px;
+        }
+        .container {
+            max-width: 600px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-select {
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chmura Project</h1>
+            <p>Wybierz kraj i miasto, aby sprawdzić aktualną pogodę</p>
+        </div>
+        
+        <form action="/weather" method="post">
+            <div class="mb-3">
+                <label for="country" class="form-label">Kraj</label>
+                <select id="country" name="country" class="form-select" required>
+                    <option value="" selected disabled>Wybierz kraj</option>
+                    {% for country in countries %}
+                    <option value="{{ country }}">{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="city" class="form-label">Miasto</label>
+                <select id="city" name="city" class="form-select" required disabled>
+                    <option value="" selected disabled>Najpierw wybierz kraj</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Sprawdź pogodę</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('country').addEventListener('change', function() {
+            const country = this.value;
+            const citySelect = document.getElementById('city');
+            
+            // Wyczyść listę miast
+            citySelect.innerHTML = '<option value="" selected disabled>Wybierz miasto</option>';
+            citySelect.disabled = true;
+            
+            if (country) {
+                // Wykonaj zapytanie AJAX, aby pobrać miasta dla wybranego kraju
+                fetch('/get_cities', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ country: country }),
+                })
+                .then(response => response.json())
+                .then(cities => {
+                    // Dodaj miasta do listy rozwijanej
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        citySelect.appendChild(option);
+                    });
+                    
+                    // Odblokuj listę miast
+                    citySelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Błąd:', error);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
